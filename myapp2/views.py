@@ -1,4 +1,3 @@
-from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
 
 from myapp2 import support_functions
@@ -20,16 +19,17 @@ def home(request):
 
 def maintenance(request):
     data = dict()
-    return render(request,"maintenance.html",context=data)
+    return render(request, "maintenance.html", context=data)
 
 def view_currencies(request):
     data = dict()
     c_list = Currency.objects.all()
     data['currencies'] = c_list
-    return render(request,'currencies.html',context=data)
+    return render(request, 'currencies.html', context=data)
 
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+
 def maintenance(request):
     data = dict()
     try:
@@ -58,6 +58,17 @@ def exch_rate(request):
         currency2 = request.GET['currency_to']
         c1 = Currency.objects.get(iso=currency1)
         c2 = Currency.objects.get(iso=currency2)
+
+        try:
+            user = request.user
+            if user.is_authenticated:
+                account_holder = AccountHolder.objects.get(user=user)
+                account_holder.currencies_visited.add(c1)
+                account_holder.currencies_visited.add(c2)
+                data['currencies_visited'] = account_holder.currencies_visited.all()
+        except:
+            pass
+
         support_functions.update_xrates(c1)
 
         data['currency1'] = c1
@@ -72,7 +83,7 @@ def exch_rate(request):
     return render(request,"exchange_detail.html",data)
 
 def register_new_user(request):
-    from myapp2.models import Currency, AccountHolder
+    from myapp2.models import AccountHolder
     from django.contrib.auth.forms import UserCreationForm
 
     context = dict()
@@ -86,4 +97,4 @@ def register_new_user(request):
     else:
         form = UserCreationForm()
         context['form'] = form
-    return render(request, "registration/register.html", context)
+    return render(request, "register.html", context)
