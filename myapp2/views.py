@@ -1,4 +1,9 @@
+from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render
+
+from myapp2 import support_functions
+from myapp2.models import Currency, AccountHolder
+
 
 # Create your views here.
 
@@ -38,3 +43,47 @@ def maintenance(request):
     except:
         pass
     return render(request,"maintenance.html",context=data)
+
+def currency_selection(request):
+    data = dict()
+    currencies =Currency.objects.all()
+    data['currencies'] = currencies
+    return render(request,"currency_selector.html",data)
+
+
+def exch_rate(request):
+    data=dict()
+    try:
+        currency1 = request.GET['currency_from']
+        currency2 = request.GET['currency_to']
+        c1 = Currency.objects.get(iso=currency1)
+        c2 = Currency.objects.get(iso=currency2)
+        support_functions.update_xrates(c1)
+
+        data['currency1'] = c1
+        data['currency2'] = c2
+        try:
+            rate = c1.rates_set.get(x_currency=c2.iso).rate
+            data['rate'] = rate
+        except:
+            data['rate'] = "Not Available"
+    except:
+        pass
+    return render(request,"exchange_detail.html",data)
+
+def register_new_user(request):
+    from myapp2.models import Currency, AccountHolder
+    from django.contrib.auth.forms import UserCreationForm
+
+    context = dict()
+    form = UserCreationForm(request.POST)
+    if form.is_valid():
+        new_user = form.save()
+        dob = request.POST["dob"]
+        acct_holder = AccountHolder(user=new_user,date_of_birth=dob)
+        acct_holder.save()
+        return render(request,"home.html",context=dict())
+    else:
+        form = UserCreationForm()
+        context['form'] = form
+    return render(request, "registration/register.html", context)

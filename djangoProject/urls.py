@@ -26,5 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("",views.home, name="home"),
     path('maintenance',views.maintenance,name='maintenance'),
-    path('currencies',views.view_currencies, name='currencies')
+    path('currencies',views.view_currencies, name='currencies'),
+    path('currency-selection',views.currency_selection,name="currency_selector"),
+    path('register',views.register_new_user,name="register_user")
 ]
